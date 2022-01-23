@@ -22,6 +22,9 @@ public:
     public:
         Vertex(){};
         Vertex(int _name, int _edgeTo): name(_name){
+            for (auto i : edgeTo){
+                if (i == _edgeTo) return;
+            }
             edgeTo.push_back(_edgeTo);
         };
         Vertex(int _name): name(_name){};
@@ -29,6 +32,9 @@ public:
             return name;
         }
         void addEdgeTo(int _edgeTo){
+            for (auto i : edgeTo){
+                if (i == _edgeTo) return;
+            }
             edgeTo.push_back(_edgeTo);
         }
         std::vector<int> &GetEdgeTo(){
@@ -51,11 +57,8 @@ class ListGraph: public IGraph
     std::vector<std::shared_ptr<Vertex>> listVer;
 public:
     ListGraph(){};
-    ListGraph(ListGraph* obj){
-        listVer = obj->listVer;
-    };
-    ListGraph(IGraph::MatrixGraph* obj){
-        listVer = obj->getFrom();
+    ListGraph(IGraph* _oth){
+        int count = _oth->VerticesCount();
     };
     virtual void AddEdge(int from, int to) {
         for (auto const &ver : listVer){
@@ -110,35 +113,41 @@ class MatrixGraph: public IGraph
 {
     std::vector<std::shared_ptr<Vertex>> from;
     std::vector<std::shared_ptr<Vertex>> to;
+    int countVertex = 0;
 public:
     MatrixGraph(){}
-    MatrixGraph(MatrixGraph* obj){
-        from = obj->from;
-        to = obj->to;
-    }
-    MatrixGraph(IGraph::ListGraph* obj){
-        from = obj->getVer();
-        for (auto const &f : from){
-            for (auto const &t : f->GetEdgeTo()){
-                to.push_back(std::make_shared<Vertex>(t, f->getStart()));
-            }
-        }
+    MatrixGraph(IGraph *_oth) {
+        int countVertex = _oth->VerticesCount();
     }
     virtual void AddEdge(int start, int where){
-        for (auto const &a : from){
-            if (a->getStart() == start){
-                for (auto b : a->GetEdgeTo()){
-                    if (b == where){
-                        std::cout << "such an edge already exists\n";
-                        return;
-                    }
-                }
-                a->addEdgeTo(where);
-                return;
+        bool foundFrom = false;
+        bool foundTo = false;
+       for (auto const& f : from){
+           if (f->getStart() == start){
+               foundFrom = true;
+               f->addEdgeTo(where);
+           }
+       }
+        for (auto const& t : to){
+            if (t->getStart() == where){
+                foundTo = true;
+                t->addEdgeTo(start);
             }
         }
-        from.push_back(std::make_shared<Vertex>(start, where));
-        to.push_back(std::make_shared<Vertex>(where, start));
+        if (!foundFrom && !foundTo) {
+            from.push_back(std::make_shared<Vertex>(start, where));
+            to.push_back(std::make_shared<Vertex>(where, start));
+            from.push_back(std::make_shared<Vertex>( where));
+            to.push_back(std::make_shared<Vertex>( start));
+        }
+        if (foundFrom && !foundTo) {
+            from.push_back(std::make_shared<Vertex>(where));
+            to.push_back(std::make_shared<Vertex>(where, start));
+        }
+        if (!foundFrom && foundTo){
+            from.push_back(std::make_shared<Vertex>(start, where));
+            to.push_back(std::make_shared<Vertex>(start));
+        }
     }
     std::vector<std::shared_ptr<Vertex>> getFrom(){
         return from;
@@ -181,16 +190,13 @@ public:
 };
 
 int main(){
-    ListGraph graph;
-    MatrixGraph mgraph(graph);
-    graph.AddEdge(1,2);
-    graph.AddEdge(3,4);
-    graph.AddEdge(7,1);
-    graph.AddEdge(1,6);
-    ListGraph b(graph);
-    graph.AddEdge(7,6);
-    graph.AddEdge(6,1);
-    std::cout << b.VerticesCount() << std::endl;
+
+    ListGraph list;
+    list.AddEdge(1,2);
+    MatrixGraph graph(&list);
+
+    std::cout << std::endl;
+    std::cout << "Count vertex\n";
     std::cout << graph.VerticesCount() << std::endl;
 
     return 0;
