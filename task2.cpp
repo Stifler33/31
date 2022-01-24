@@ -9,6 +9,7 @@ public:
     IGraph(IGraph *_oth) {};
     virtual void AddEdge(int from, int to) = 0; // Метод принимает вершины начала и конца ребра и добавляет ребро
     virtual int VerticesCount() const = 0; // Метод должен считать текущее количество вершин
+    virtual void GetVertices(std::vector<int> &vertices) const = 0; //считываем в вектор все имена вершин
     // Для конкретной вершины метод выводит в вектор “вершины” все вершины, в которые можно дойти по ребру из данной
     virtual void GetNextVertices(int vertex, std::vector<int> &vertices) const = 0;
 
@@ -27,6 +28,9 @@ public:
             }
             edgeTo.push_back(_edgeTo);
         };
+        Vertex(int _name, std::vector<int> &vec): name(_name), edgeTo(vec){
+
+        }
         Vertex(int _name): name(_name){};
         int getStart(){
             return name;
@@ -41,15 +45,6 @@ public:
             return edgeTo;
         }
     };
-    class MatrixGraph{
-    public:
-        virtual std::vector<std::shared_ptr<Vertex>> getFrom() = 0;
-        virtual std::vector<std::shared_ptr<Vertex>> getTo() = 0;
-    };
-    class ListGraph{
-    public:
-        virtual std::vector<std::shared_ptr<Vertex>> getVer() = 0;
-    };
 };
 
 class ListGraph: public IGraph
@@ -58,7 +53,13 @@ class ListGraph: public IGraph
 public:
     ListGraph(){};
     ListGraph(IGraph* _oth){
-        int count = _oth->VerticesCount();
+        std::vector<int> allVer;
+        _oth->GetVertices(allVer);
+        for (auto i : allVer){
+            std::vector<int> buff;
+            _oth->GetNextVertices(i, buff);
+            listVer.push_back(std::make_shared<Vertex>(i, buff));
+        }
     };
     virtual void AddEdge(int from, int to) {
         for (auto const &ver : listVer){
@@ -70,6 +71,12 @@ public:
                     }
                 }
                 ver->addEdgeTo(to);
+                for (auto const &i : listVer){
+                    if (to == i->getStart()){
+                        return;
+                    }
+                }
+                listVer.push_back(std::make_shared<Vertex>(to));
                 return;
             }
         }
@@ -101,10 +108,15 @@ public:
                 }
             }
         }
-        if (vertices.empty()) std::cout << "you can't get here\n";
+        if (vertices.empty()) std::cout << "Vertex " << vertex << " you can't get here\n";
     }
-    virtual  int VerticesCount() const{
+    int VerticesCount() const{
         return (int)listVer.size();
+    }
+    void GetVertices(std::vector<int> &vertices) const {
+        for (auto const &i : listVer){
+            vertices.push_back(i->getStart());
+        }
     }
     virtual ~ListGraph(){};
 };
@@ -113,11 +125,19 @@ class MatrixGraph: public IGraph
 {
     std::vector<std::shared_ptr<Vertex>> from;
     std::vector<std::shared_ptr<Vertex>> to;
-    int countVertex = 0;
 public:
     MatrixGraph(){}
     MatrixGraph(IGraph *_oth) {
-        int countVertex = _oth->VerticesCount();
+        std::vector<int> allVert;
+        _oth->GetVertices(allVert);
+        for (auto aV : allVert){
+            std::vector<int> buff;
+            std::vector<int> buffTo;
+            _oth->GetNextVertices(aV, buff);
+            _oth->GetPrevVertices(aV, buffTo);
+            from.push_back(std::make_shared<Vertex>(aV, buff));
+            to.push_back(std::make_shared<Vertex>(aV, buffTo));
+        }
     }
     virtual void AddEdge(int start, int where){
         bool foundFrom = false;
@@ -155,6 +175,11 @@ public:
     std::vector<std::shared_ptr<Vertex>> getTo(){
         return to;
     }
+    virtual void GetVertices(std::vector<int> &vertices) const {
+        for (auto const &i : from){
+            vertices.push_back(i->getStart());
+        }
+    }
     virtual int VerticesCount() const {
         return (int)from.size();
     }
@@ -191,13 +216,20 @@ public:
 
 int main(){
 
-    ListGraph list;
+    MatrixGraph list;
+    list.AddEdge(1,4);
     list.AddEdge(1,2);
+    list.AddEdge(4,6);
+    list.AddEdge(6,1);
+    list.AddEdge(7,4);
+    list.AddEdge(7,6);
     MatrixGraph graph(&list);
-
+    ListGraph list2(&list);
     std::cout << std::endl;
-    std::cout << "Count vertex\n";
+    std::cout << "Count vertex matrix\n";
     std::cout << graph.VerticesCount() << std::endl;
-
+    std::cout << std::endl;
+    std::cout << "Count vertex list\n";
+    std::cout << list.VerticesCount() << std::endl;
     return 0;
 }
