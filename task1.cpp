@@ -55,9 +55,6 @@ public:
         if (this == &obj){
             return *this;
         }
-        if (toy_ptr != nullptr){
-            delete toy_ptr;
-        }
         if(*count != 0){
             *count -= 1;
         }else if (*count == 0){
@@ -99,13 +96,10 @@ int main() {
     Toy a("ball");
     shared_ptr_toy<Toy> x("gaf");
     shared_ptr_toy<Toy> g;
-    shared_ptr_toy<Toy> kj = g;
+    shared_ptr_toy<Toy> kj;
     shared_ptr_toy<Toy> h;
     shared_ptr_toy<Toy> j;
     shared_ptr_toy<Toy> k("gloo");
-    g = x;
-    h = x;
-    j = x;
-    g = k;
+
     return 0;
 }
