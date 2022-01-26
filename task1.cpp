@@ -59,6 +59,7 @@ public:
             *count -= 1;
         }else if (*count == 0){
             delete count;
+            delete toy_ptr;
         }
         toy_ptr = obj.toy_ptr;
         count = obj.count;
