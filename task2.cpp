@@ -181,14 +181,22 @@ public:
         }
         std::vector<int> to;
         for (int t = 0; t < matrix[from].size(); t++){
-            if (matrix[from][t] == 1)to.push_back(t);
-        }
-        for (auto j : to){
-            vertices.push_back(indexVertex[j]);
+            if (matrix[from][t] == 1)vertices.push_back(indexVertex[t]);
         }
     }
     void GetPrevVertices(int vertex, std::vector<int> &vertices) const override{
-
+        int indexVer;
+        if (auto i = vertexIndex.find(vertex); i != vertexIndex.end()){
+            indexVer = i->second;
+        }else {
+            std::cout << "vertex non\n";
+            return;
+        }
+        for (int j = 0; j < matrix.size(); j++){
+            if (matrix[j][indexVer] == 1){
+                vertices.push_back(indexVertex[j]);
+            }
+        }
     }
     ~MatrixGraph() {}
 };
@@ -196,11 +204,16 @@ public:
 int main(){
     MatrixGraph list1;
     list1.AddEdge(1,2);
-    list1.AddEdge(1,3);
+    list1.AddEdge(2,1);
+    list1.AddEdge(3,1);
+    list1.AddEdge(41,33);
+    list1.AddEdge(33,3);
     list1.AddEdge(100,100);
+    list1.AddEdge(1,100);
     std::vector<int> a;
-    list1.GetNextVertices(1,a);
-
+    std::vector<int> b;
+    list1.GetPrevVertices(1,a);
+    list1.GetNextVertices(1, b);
     /*
     list1.AddEdge(1,2);
     list1.AddEdge(2,1);
