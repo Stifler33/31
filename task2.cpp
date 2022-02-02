@@ -16,121 +16,45 @@ public:
     virtual void GetNextVertices(int vertex, std::vector<int> &vertices) const = 0;
     // Для конкретной вершины метод выводит в вектор “вершины” все вершины, из которых можно дойти по ребру в данную
     virtual void GetPrevVertices(int vertex, std::vector<int> &vertices) const = 0;
-
-    class Vertex
-    {
-        int name;
-        std::vector<int> edgeTo;
-    public:
-        Vertex(){};
-        Vertex(int _name, int _edgeTo): name(_name){
-            for (auto i : edgeTo){
-                if (i == _edgeTo) return;
-            }
-            edgeTo.push_back(_edgeTo);
-        };
-        Vertex(int _name, std::vector<int> &vec): name(_name), edgeTo(vec){
-
-        }
-        Vertex(int _name): name(_name){};
-        int getStart(){
-            return name;
-        }
-        void addEdgeTo(int _edgeTo){
-            for (auto i : edgeTo){
-                if (i == _edgeTo) return;
-            }
-            edgeTo.push_back(_edgeTo);
-        }
-        std::vector<int> &GetEdgeTo(){
-            return edgeTo;
-        }
-    };
 };
 
 class ListGraph: public IGraph
 {
-    std::vector<std::shared_ptr<Vertex>> listVer;
+    std::map<int, std::vector<int>> nexVer;
+    std::map<int, std::vector<int>> prevVer;
 public:
     ListGraph(){};
     ListGraph(IGraph* _oth){
-        std::vector<int> allVer;
-        _oth->GetVertices(allVer);
-        for (auto i : allVer){
-            std::vector<int> buff;
-            _oth->GetNextVertices(i, buff);
-            listVer.push_back(std::make_shared<Vertex>(i, buff));
-        }
+
     };
-    void AddEdge(int from, int to) final{
-        for (auto const &ver : listVer){
-            if (ver->getStart() == from){
-                for (auto w : ver->GetEdgeTo()){
-                    if (w == to){
-                        std::cout << "such an edge already exists\n";
-                        return;
-                    }
-                }
-                ver->addEdgeTo(to);
-                for (auto const &i : listVer){
-                    if (to == i->getStart()){
-                        return;
-                    }
-                }
-                listVer.push_back(std::make_shared<Vertex>(to));
-                return;
+    void AddEdge(int from, int to) override{
+        if (auto obj = nexVer.find(from); obj != nexVer.end()){
+            for(auto i : obj->second){
+                if (i == to) return;
             }
-        }
-        listVer.push_back(std::make_shared<Vertex>(from, to));
-        listVer.push_back(std::make_shared<Vertex>(to));
-    }
-    std::vector<std::shared_ptr<Vertex>> getVer(){
-        return listVer;
-    }
-    void GetNextVertices(int vertex, std::vector<int> &vertices) const final{
-        for (auto const &i : listVer){
-            if (i->getStart() == vertex){
-                if (!i->GetEdgeTo().empty()){
-                    vertices = i->GetEdgeTo();
-                    return;
-                }else {
-                    std::cout << "vertices empty\n";
-                    return;
-                }
-            }
-        }
-        std::cout << "no vertex\n";
-    }
-    void GetPrevVertices(int vertex, std::vector<int> &vertices) const final{
-        for (auto ptr : listVer){
-            for (auto ver : ptr->GetEdgeTo()){
-                if (ver == vertex){
-                    vertices.push_back(ptr->getStart());
-                }
-            }
-        }
-        if (vertices.empty()) std::cout << "Vertex " << vertex << " you can't get here\n";
-    }
-    int VerticesCount() const final{
-        return (int)listVer.size();
-    }
-    void GetVertices(std::vector<int> &vertices) const final{
-        for (auto const &i : listVer){
-            vertices.push_back(i->getStart());
+            nexVer[from].push_back(to);
+            if (nexVer.count(to) == 0) nexVer[to] = std::vector<int>(0);
+            return;
+        }else {
+            nexVer[from].push_back(to);
+            if (nexVer.count(to) == 0) nexVer[to] = std::vector<int>(0);
+            return;
         }
     }
-    ListGraph& operator=(const IGraph& _oth) final{
-        if (this == &_oth){
-            return *this;
-        }
-        std::vector<int> allVer;
-        _oth.GetVertices(allVer);
-        for (auto i : allVer){
-            std::vector<int> buff;
-            _oth.GetNextVertices(i, buff);
-            listVer.push_back(std::make_shared<Vertex>(i, buff));
-        }
-        return *this;
+    void GetNextVertices(int vertex, std::vector<int> &vertices) const override{
+
+    }
+    void GetPrevVertices(int vertex, std::vector<int> &vertices) const override{
+
+    }
+    int VerticesCount() const override{
+        return nexVer.size();
+    }
+    void GetVertices(std::vector<int> &vertices) const override{
+
+    }
+    ListGraph& operator=(const IGraph& _oth) override{
+
     }
     ~ListGraph(){};
 };
@@ -202,14 +126,16 @@ public:
 };
 
 int main(){
-    MatrixGraph list1;
+    ListGraph list1;
     list1.AddEdge(1,2);
-    list1.AddEdge(2,1);
+    list1.AddEdge(1,2);
     list1.AddEdge(3,1);
     list1.AddEdge(41,33);
     list1.AddEdge(33,3);
     list1.AddEdge(100,100);
     list1.AddEdge(1,100);
+    std::cout << list1.VerticesCount();
+    return 0;
     std::vector<int> a;
     std::vector<int> b;
     list1.GetPrevVertices(1,a);
