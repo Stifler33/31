@@ -34,18 +34,38 @@ public:
             }
             nexVer[from].push_back(to);
             if (nexVer.count(to) == 0) nexVer[to] = std::vector<int>(0);
-            return;
+            //return;
         }else {
             nexVer[from].push_back(to);
             if (nexVer.count(to) == 0) nexVer[to] = std::vector<int>(0);
-            return;
+            //return;
+        }
+        //добавляем вершины в обратный список
+        if (auto prev = prevVer.find(to); prev != prevVer.end()){
+            for (auto i : prev->second){
+                if (i == from) return;
+            }
+            prevVer[to].push_back(from);
+            if (prevVer.count(from) == 0) prevVer[from] = std::vector<int>(0);
+        }else{
+            prevVer[to].push_back(from);
+            if (prevVer.count(from) == 0) prevVer[from] = std::vector<int>(0);
         }
     }
     void GetNextVertices(int vertex, std::vector<int> &vertices) const override{
-
+        if (auto ver = nexVer.find(vertex); ver != nexVer.end()){
+            for (auto num : ver->second){
+                vertices.push_back(num);
+            }
+            return;
+        }else return;
     }
     void GetPrevVertices(int vertex, std::vector<int> &vertices) const override{
-
+        if (auto prev = prevVer.find(vertex); prev != prevVer.end()){
+            for (auto i : prev->second){
+                vertices.push_back(i);
+            }
+        }
     }
     int VerticesCount() const override{
         return nexVer.size();
@@ -132,8 +152,23 @@ int main(){
     list1.AddEdge(3,1);
     list1.AddEdge(41,33);
     list1.AddEdge(33,3);
+    list1.AddEdge(33,1);
+    list1.AddEdge(41,1);
     list1.AddEdge(100,100);
     list1.AddEdge(1,100);
+    std::string user;
+    while (user != "q"){
+        int numVer;
+        std::cin >> user;
+        if (user == "q") continue;
+        numVer = stoi(user);
+        std::vector<int> a;
+        list1.GetPrevVertices(numVer, a);
+        for (auto i : a){
+            std::cout << i << " ";
+        }
+        std::cout << std::endl;
+    }
     std::cout << list1.VerticesCount();
     return 0;
     std::vector<int> a;
