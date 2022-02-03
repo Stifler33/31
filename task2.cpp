@@ -8,7 +8,7 @@ public:
     IGraph() {};
     IGraph(IGraph &_oth) {};
 
-    virtual IGraph& operator=(const IGraph& _oth) {};
+    IGraph& operator=(const IGraph& _oth) {};
     virtual void AddEdge(int from, int to) = 0; // Метод принимает вершины начала и конца ребра и добавляет ребро
     virtual int VerticesCount() const = 0; // Метод должен считать текущее количество вершин
     virtual void GetVertices(std::vector<int> &vertices) const = 0; //считываем в вектор все имена вершин
@@ -22,10 +22,7 @@ class ListGraph: public IGraph
 {
     std::map<int, std::vector<int>> nexVer;
     std::map<int, std::vector<int>> prevVer;
-public:
-    ListGraph(){};
-    ListGraph(IGraph& _oth){
-        if (this == &_oth) return;
+    void copy(IGraph& _oth) {
         std::vector<int> vertex;
         _oth.GetVertices(vertex);
         for (auto& i : vertex){
@@ -36,6 +33,12 @@ public:
             _oth.GetNextVertices(i, nextItr->second);
             _oth.GetPrevVertices(i, prevItr->second);
         }
+    }
+public:
+    ListGraph(){};
+    ListGraph(IGraph& _oth){
+        if (this == &_oth) return;
+        copy(_oth);
     }
     void AddEdge(int from, int to) override{
         if (auto obj = nexVer.find(from); obj != nexVer.end()){
@@ -85,7 +88,10 @@ public:
             vertices.push_back(vertex.first);
         }
     }
-    ListGraph& operator=(const IGraph& _oth) override{
+    ListGraph& operator=(IGraph& _oth) {
+        if (this == &_oth) return *this;
+        copy(_oth);
+        return *this;
     }
     ~ListGraph(){};
 };
@@ -106,9 +112,7 @@ class MatrixGraph: public IGraph
         matrix.emplace_back(size_indexVertex + 1,0);
         return size_indexVertex;
     }
-public:
-    MatrixGraph(){}
-    MatrixGraph(IGraph &_oth) {
+    void copy(IGraph &_oth){
         std::map<int, std::vector<int>> mapVer;
         std::vector<int> numVer;
         _oth.GetVertices(numVer);
@@ -123,8 +127,16 @@ public:
             }
         }
     }
-    MatrixGraph& operator=(const IGraph& _oth) final{
-
+public:
+    MatrixGraph(){}
+    MatrixGraph(IGraph &_oth) {
+        if (this == &_oth) return;
+        copy(_oth);
+    }
+    MatrixGraph& operator=(IGraph& _oth) {
+        if (this == &_oth) return *this;
+        copy(_oth);
+        return *this;
     }
 
     void AddEdge(int start, int where) override{
@@ -180,7 +192,9 @@ int main(){
     list1.AddEdge(41,1);
     list1.AddEdge(100,100);
     list1.AddEdge(1,100);
-    MatrixGraph list2(list1);
+    MatrixGraph list2;
+    list2 = list1;
+    ListGraph list3(list2);
     std::string user;
     while (user != "q"){
         int numVer;
@@ -188,25 +202,11 @@ int main(){
         if (user == "q") continue;
         numVer = stoi(user);
         std::vector<int> a;
-        list2.GetNextVertices(numVer, a);
+        list3.GetNextVertices(numVer, a);
         for (auto i : a){
             std::cout << i << " ";
         }
         std::cout << std::endl;
     }
-    std::cout << list1.VerticesCount();
-    return 0;
-    std::vector<int> a;
-    std::vector<int> b;
-    list1.GetPrevVertices(1,a);
-    list1.GetNextVertices(1, b);
-    /*
-    list1.AddEdge(1,2);
-    list1.AddEdge(2,1);
-    list1.AddEdge(3,1);
-    list1.AddEdge(41,33);
-    list1.AddEdge(33,3);
-    list1.AddEdge(100,100);
-     */
     return 0;
 }
