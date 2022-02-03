@@ -6,7 +6,7 @@ class IGraph {
 public:
     virtual ~IGraph() {}
     IGraph() {};
-    IGraph(IGraph *_oth) {};
+    IGraph(IGraph &_oth) {};
 
     virtual IGraph& operator=(const IGraph& _oth) {};
     virtual void AddEdge(int from, int to) = 0; // Метод принимает вершины начала и конца ребра и добавляет ребро
@@ -24,9 +24,19 @@ class ListGraph: public IGraph
     std::map<int, std::vector<int>> prevVer;
 public:
     ListGraph(){};
-    ListGraph(IGraph* _oth){
-
-    };
+    ListGraph(IGraph& _oth){
+        if (this == &_oth) return;
+        std::vector<int> vertex;
+        _oth.GetVertices(vertex);
+        for (auto& i : vertex){
+            nexVer[i] = std::vector<int>(0);
+            prevVer[i] = std::vector<int>(0);
+            auto nextItr = nexVer.find(i);
+            auto prevItr = prevVer.find(i);
+            _oth.GetNextVertices(i, nextItr->second);
+            _oth.GetPrevVertices(i, prevItr->second);
+        }
+    }
     void AddEdge(int from, int to) override{
         if (auto obj = nexVer.find(from); obj != nexVer.end()){
             for(auto i : obj->second){
@@ -71,10 +81,11 @@ public:
         return nexVer.size();
     }
     void GetVertices(std::vector<int> &vertices) const override{
-
+        for (auto& vertex : nexVer){
+            vertices.push_back(vertex.first);
+        }
     }
     ListGraph& operator=(const IGraph& _oth) override{
-
     }
     ~ListGraph(){};
 };
@@ -97,8 +108,20 @@ class MatrixGraph: public IGraph
     }
 public:
     MatrixGraph(){}
-    MatrixGraph(IGraph *_oth) {
-
+    MatrixGraph(IGraph &_oth) {
+        std::map<int, std::vector<int>> mapVer;
+        std::vector<int> numVer;
+        _oth.GetVertices(numVer);
+        for (auto i : numVer){
+            mapVer[i] = std::vector<int>(0);
+            auto itr = mapVer.find(i);
+            _oth.GetNextVertices(i, itr->second);
+        }
+        for (auto itr : mapVer){
+            for (auto i : itr.second){
+                AddEdge(itr.first, i);
+            }
+        }
     }
     MatrixGraph& operator=(const IGraph& _oth) final{
 
@@ -110,7 +133,9 @@ public:
     }
 
     void GetVertices(std::vector<int> &vertices) const override{
-
+        for (auto& vertex : vertexIndex){
+            vertices.push_back(vertex.first);
+        }
     }
     int VerticesCount() const override{
         return indexVertex.size();
@@ -148,7 +173,6 @@ public:
 int main(){
     ListGraph list1;
     list1.AddEdge(1,2);
-    list1.AddEdge(1,2);
     list1.AddEdge(3,1);
     list1.AddEdge(41,33);
     list1.AddEdge(33,3);
@@ -156,6 +180,7 @@ int main(){
     list1.AddEdge(41,1);
     list1.AddEdge(100,100);
     list1.AddEdge(1,100);
+    MatrixGraph list2(list1);
     std::string user;
     while (user != "q"){
         int numVer;
@@ -163,7 +188,7 @@ int main(){
         if (user == "q") continue;
         numVer = stoi(user);
         std::vector<int> a;
-        list1.GetPrevVertices(numVer, a);
+        list2.GetNextVertices(numVer, a);
         for (auto i : a){
             std::cout << i << " ";
         }
